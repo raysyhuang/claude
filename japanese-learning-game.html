@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Japanese Learning Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        #game-container {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #mode-select, #difficulty-select {
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        #word-display {
+            font-size: 36px;
+            margin-bottom: 20px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #score, #timer {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        #progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        #progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Advanced Japanese Learning Game</h1>
+        <div id="mode-select">
+            <select id="game-mode">
+                <option value="vocabulary">Vocabulary</option>
+                <option value="hiragana">Hiragana</option>
+                <option value="katakana">Katakana</option>
+            </select>
+        </div>
+        <div id="difficulty-select">
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+        <div id="word-display"></div>
+        <div id="options"></div>
+        <div id="score">Score: 0</div>
+        <div id="timer">Time: 60s</div>
+        <div id="progress-bar">
+            <div id="progress"></div>
+        </div>
+    </div>
+
+    <script>
+        const words = {
+            easy: [
+                { japanese: 'こんにちは', english: 'Hello', hiragana: 'こんにちは', katakana: 'コンニチハ' },
+                { japanese: '猫', english: 'Cat', hiragana: 'ねこ', katakana: 'ネコ' },
+                { japanese: '犬', english: 'Dog', hiragana: 'いぬ', katakana: 'イヌ' },
+                { japanese: '水', english: 'Water', hiragana: 'みず', katakana: 'ミズ' },
+                { japanese: '本', english: 'Book', hiragana: 'ほん', katakana: 'ホン' }
+            ],
+            medium: [
+                { japanese: '学生', english: 'Student', hiragana: 'がくせい', katakana: 'ガクセイ' },
+                { japanese: '先生', english: 'Teacher', hiragana: 'せんせい', katakana: 'センセイ' },
+                { japanese: '車', english: 'Car', hiragana: 'くるま', katakana: 'クルマ' },
+                { japanese: '電話', english: 'Telephone', hiragana: 'でんわ', katakana: 'デンワ' },
+                { japanese: '友達', english: 'Friend', hiragana: 'ともだち', katakana: 'トモダチ' }
+            ],
+            hard: [
+                { japanese: '図書館', english: 'Library', hiragana: 'としょかん', katakana: 'トショカン' },
+                { japanese: '美術館', english: 'Art Museum', hiragana: 'びじゅつかん', katakana: 'ビジュツカン' },
+                { japanese: '料理', english: 'Cooking', hiragana: 'りょうり', katakana: 'リョウリ' },
+                { japanese: '旅行', english: 'Travel', hiragana: 'りょこう', katakana: 'リョコウ' },
+                { japanese: '音楽', english: 'Music', hiragana: 'おんがく', katakana: 'オンガク' }
+            ]
+        };
+
+        let currentWord;
+        let score = 0;
+        let timeLeft = 60;
+        let timer;
+        let currentMode = 'vocabulary';
+        let currentDifficulty = 'easy';
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function newRound() {
+            const currentWords = words[currentDifficulty];
+            shuffleArray(currentWords);
+            currentWord = currentWords[0];
+
+            const wordDisplay = document.getElementById('word-display');
+            switch(currentMode) {
+                case 'vocabulary':
+                    wordDisplay.textContent = currentWord.japanese;
+                    break;
+                case 'hiragana':
+                    wordDisplay.textContent = currentWord.hiragana;
+                    break;
+                case 'katakana':
+                    wordDisplay.textContent = currentWord.katakana;
+                    break;
+            }
+
+            const options = [currentWord.english, ...currentWords.slice(1, 4).map(w => w.english)];
+            shuffleArray(options);
+
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedOption) {
+            if (selectedOption === currentWord.english) {
+                score++;
+                updateProgress();
+            }
+            document.getElementById('score').textContent = 'Score: ' + score;
+            newRound();
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById('timer').textContent = 'Time: ' + timeLeft + 's';
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                alert('Game Over! Your score is: ' + score);
+                resetGame();
+            }
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progress');
+            const newWidth = (score / 10) * 100;
+            progressBar.style.width = newWidth + '%';
+        }
+
+        function resetGame() {
+            score = 0;
+            timeLeft = 60;
+            document.getElementById('score').textContent = 'Score: 0';
+            document.getElementById('timer').textContent = 'Time: 60s';
+            document.getElementById('progress').style.width = '0%';
+            clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+            newRound();
+        }
+
+        document.getElementById('game-mode').addEventListener('change', (e) => {
+            currentMode = e.target.value;
+            resetGame();
+        });
+
+        document.getElementById('difficulty').addEventListener('change', (e) => {
+            currentDifficulty = e.target.value;
+            resetGame();
+        });
+
+        resetGame();
+    </script>
+</body>
+</html>
