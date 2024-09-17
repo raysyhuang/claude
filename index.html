@@ -56,17 +56,22 @@
             color: white;
             border: none;
             border-radius: 5px;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, opacity 0.3s;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         button:hover {
             background-color: #45a049;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         #feedback {
             font-size: 18px;
             margin-bottom: 20px;
             height: 24px;
+            transition: color 0.3s;
         }
         #score, #remaining {
             font-size: 18px;
@@ -82,15 +87,17 @@
     </style>
 </head>
 <body>
-    <div id="game-container">
+    <div id="game-container" role="main">
         <h1>Chinese Character, Pinyin, and Tone Game</h1>
-        <div id="character-display"></div>
+        <div id="character-display" aria-live="polite"></div>
         <div class="input-container">
-            <input type="text" id="pinyin-input" placeholder="Pinyin">
-            <input type="text" id="tone-input" placeholder="Tone (1-5)">
+            <input type="text" id="pinyin-input" placeholder="Pinyin" aria-label="Pinyin">
+            <input type="text" id="tone-input" placeholder="Tone (1-5)" aria-label="Tone">
         </div>
         <button id="submit-btn">Submit</button>
-        <div id="feedback"></div>
+        <button id="next-btn" style="display: none;">Next</button>
+        <button id="reset-btn">Reset</button>
+        <div id="feedback" aria-live="polite"></div>
         <div id="score">Score: 0</div>
         <div id="remaining">Remaining: 5</div>
         <div id="incorrect-list"></div>
@@ -236,6 +243,10 @@
         }
 
         function newRound() {
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('pinyin-input').disabled = false;
+            document.getElementById('tone-input').disabled = false;
             if (characters.length === 0) {
                 characters.push(...incorrectAttempts);
                 incorrectAttempts = [];
@@ -250,25 +261,28 @@
 
         function checkAnswer() {
             const pinyinInput = document.getElementById('pinyin-input').value.toLowerCase();
-            const toneInput = document.getElementById('tone-input').value;
+            const toneInput = document.getElementById('tone-input').value.toLowerCase();
             const feedback = document.getElementById('feedback');
 
             if (pinyinInput === currentCharacter.pinyin && toneInput === currentCharacter.tone) {
                 score++;
                 feedback.textContent = 'Correct!';
                 feedback.style.color = 'green';
+                setTimeout(newRound, 1500);
             } else {
                 incorrectAttempts.push(currentCharacter);
                 feedback.textContent = `Incorrect. The correct answer is: ${currentCharacter.pinyin} (tone ${currentCharacter.tone})`;
                 feedback.style.color = 'red';
+                document.getElementById('next-btn').style.display = 'block';
+                document.getElementById('submit-btn').disabled = true;
+                document.getElementById('pinyin-input').disabled = true;
+                document.getElementById('tone-input').disabled = true;
             }
 
             remaining--;
             updateScore();
 
-            if (remaining > 0) {
-                setTimeout(newRound, 1500);
-            } else {
+            if (remaining === 0) {
                 endGame();
             }
         }
@@ -279,8 +293,15 @@
         }
 
         function endGame() {
-            document.getElementById('character-display').textContent = 'Game Over!';
+            if (incorrectAttempts.length === 0) {
+                document.getElementById('character-display').textContent = 'Well done!';
+                document.getElementById('character-display').style.color = 'green';
+            } else {
+                document.getElementById('character-display').textContent = 'Game Over!';
+                document.getElementById('character-display').style.color = 'red';
+            }
             document.getElementById('submit-btn').disabled = true;
+            document.getElementById('next-btn').disabled = true;
             displayIncorrectAttempts();
         }
 
@@ -296,7 +317,19 @@
             }
         }
 
+        function resetGame() {
+            score = 0;
+            remaining = 5;
+            incorrectAttempts = [];
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('next-btn').disabled = false;
+            updateScore();
+            newRound();
+        }
+
         document.getElementById('submit-btn').addEventListener('click', checkAnswer);
+        document.getElementById('reset-btn').addEventListener('click', resetGame);
+        document.getElementById('next-btn').addEventListener('click', newRound);
 
         newRound();
     </script>
