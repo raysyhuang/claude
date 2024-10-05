@@ -1,11 +1,7 @@
 // characters.js
-const characters = [
+export default [
     { char: '爱', pinyin: 'ai', tone: '4' },
     { char: '的', pinyin: 'de', tone: '5' },
-    { char: '级', pinyin: 'ji', tone: '2' },
-    { char: '小', pinyin: 'xiao', tone: '3' },
-    { char: '可', pinyin: 'ke', tone: '3' },
-    { char: '丽', pinyin: 'li', tone: '4' },
     { char: '知', pinyin: 'zhi', tone: '1' },
     { char: '道', pinyin: 'dao', tone: '4' },
     { char: '在', pinyin: 'zai', tone: '4' },
